@@ -150,7 +150,7 @@ plt.savefig('eda_plots/06_weight_control_exercise.png', dpi=150, bbox_inches='ti
 plt.show()
 print("Saved plot 6")
 
-# ── Plot 7: Physical activity heatmap ────────────────────────────────────────
+# Plot 7: Physical activity heatmap
 fig, ax = plt.subplots(figsize=(11, 5), facecolor='#F8F9FA')
 activity_cols = ['BE3_31', 'BE5_1', 'BE3_72', 'BE3_82', 'BE3_76', 'BE3_86']
 act_labels    = ['Walking (days/wk)', 'Strength Training', 'High-Int Work',
@@ -170,7 +170,7 @@ plt.savefig('eda_plots/07_activity_heatmap.png', dpi=150, bbox_inches='tight')
 plt.show()
 print("Saved plot 7")
 
-# ── Plot 8: Prediabetes rate by occupation ────────────────────────────────────
+# Plot 8: Prediabetes rate by occupation
 fig, ax = plt.subplots(figsize=(9, 7), facecolor='#F8F9FA')
 occ_rate = df.groupby('EC_occp_label')['diabetes'].mean().sort_values(ascending=True) * 100
 colors   = ['#E05C5C' if v > df['diabetes'].mean() * 100 else '#4A90D9'
@@ -190,7 +190,7 @@ plt.savefig('eda_plots/08_occupation_prediabetes_rate.png', dpi=150, bbox_inches
 plt.show()
 print("Saved plot 8")
 
-# ── Plot 9: Correlation heatmap ───────────────────────────────────────────────
+# Plot 9: Correlation heatmap
 fig, ax = plt.subplots(figsize=(12, 10), facecolor='#F8F9FA')
 corr_cols   = ['age', 'BMI', 'EC_wht_23', 'BE3_31', 'BE5_1',
                'BE3_72', 'BE3_82', 'BE3_76', 'BE3_86', 'BO3_01', 'diabetes']
