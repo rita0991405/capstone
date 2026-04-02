@@ -8,7 +8,6 @@ import os
 df = pd.read_csv('Prediabetes.csv')
 
 # Data info
-
 print(df.info())
 print(df.describe())
 
