@@ -192,29 +192,32 @@ def simulate_lifestyle_changes(user_df_kr, user_input_dict_jp, kr_pipeline, kr_b
             current_val = jp_df[feature].values[0]
 
         if not _is_applicable(scenario, feature, current_val, user_df_kr): continue
+        
 
-        # Simulate change
+        mod_kr = user_df_kr.copy()
+        mod_jp = jp_df.copy()
+        new_val = max(0, current_val + scenario.get('delta', 0))
+
         if source == 'kr':
-            modified = user_df_kr.copy()
-            new_val = max(0, current_val + scenario.get('delta', 0))
-            if feature == 'BO3_01': new_val = 1
-            modified[feature] = new_val
-            if feature == 'HE_wt' and 'BMI' in modified.columns:
-                modified['BMI'] = modified['HE_wt'] / (modified['HE_ht'] / 100) ** 2
-            
-            new_risk = kr_pipeline.predict_proba(modified)[:, 1][0]
-            risk_reduction = kr_baseline_risk - new_risk
+            mod_kr[feature] = new_val
+            if feature == 'BO3_01': mod_kr[feature] = 1
+            # Recalculate BMI if weight changes 
+            if feature == 'HE_wt' and 'BMI' in mod_kr.columns:
+                mod_kr['BMI'] = mod_kr['HE_wt'] / (mod_kr['HE_ht'] / 100) ** 2
         else:
-            modified = jp_df.copy()
-            new_val = scenario.get('target_val', max(0, current_val + scenario.get('delta', 0)))
-            modified[feature] = new_val
-            new_risk = JP_MODEL.predict_proba(modified)[:, 1][0]
-            risk_reduction = jp_baseline_risk - new_risk
+            mod_jp[feature] = new_val
+
+        kr_risk = kr_pipeline.predict_proba(mod_kr)[:, 1][0]
+        risk_reduction_kr = kr_baseline_risk - kr_risk
+        jp_risk = JP_MODEL.predict_proba(mod_jp)[:, 1][0]
+        risk_reduction_jp = jp_baseline_risk - jp_risk
+
+        new_risk = (kr_risk + jp_risk) / 2
 
         room = _room_for_improvement(feature, current_val, user_df_kr)
-        priority_score = risk_reduction * room
+        priority_score = new_risk * room
 
-        if risk_reduction > MIN_RISK_REDUCTION:
+        if new_risk > MIN_RISK_REDUCTION:
             room = _room_for_improvement(feature, current_val, user_df_kr)
             recommendations.append({
                 'id':             scenario['id'],
@@ -223,11 +226,11 @@ def simulate_lifestyle_changes(user_df_kr, user_input_dict_jp, kr_pipeline, kr_b
                 'current_value':  round(float(current_val), 2),
                 'new_value':      round(float(new_val), 2),
                 'new_risk':       round(float(new_risk * 100), 1),
-                'risk_reduction': round(float(risk_reduction * 100), 2),
+                'risk_reduction': round(float(new_risk * 100), 2),
                 'priority_score': round(float(priority_score * 100), 4),
                 'message': (
                     f"If you {scenario['label'].lower()}, your predicted risk "
-                    f"(a reduction of {risk_reduction*100:.1f} percentage points)."
+                    f"(a reduction of {new_risk*100:.1f} percentage points)."
                 )
             })
     recommendations.sort(key=lambda x: x['priority_score'], reverse=True)
