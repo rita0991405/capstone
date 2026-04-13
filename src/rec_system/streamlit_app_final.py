@@ -320,3 +320,4 @@ if calculate_button:
             </div>
             <br>
             """, unsafe_allow_html=True)
+            
