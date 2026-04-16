@@ -1,9 +1,11 @@
 # capstone
 Capstone project for MADS program
-# (Project Title)
+
+# Predicting Type 2 Diabetes Risk in East Asian Populations
 
 ## Project Overview
-(project overview)
+This project set out to investigate whether sleep-related characteristics, such as duration and maintenance, could meaningfully predict Type 2 diabetes risk in East Asian populations, where existing Western-focused models may not apply due to elevated metabolic risk at lower body–mass index (BMI) values.
+
 
 ## Team Members
 - Li-yuan Chen
@@ -11,20 +13,13 @@ Capstone project for MADS program
 - Kento Takeda
 
 ## Repository Structure
-capstone/
-│
-├── data/ # Datasets
-├── scr/ # Python source code
-│ ├── eda/
-│ │ ├── prediabetes_eda.py
-│ │ ├── S1file_eda.py
-│ ├── modeling/
-│ │ ├── prediabetes_model.py
-│ │ └── s1file_model.py
-│ ├── rec_system/
-│ │ ├── predictor.py
-│ │ └── recommender.py
-└── README.md
+- `data/` - Sample datasets
+- `scr/` - All Python code for data cleaning, modeling, and receommender system
+- `scr/eda` - Exploratory Data Analysis scripts (data visualization, summaries, insights)
+- `scr/modleing` - Model training, evaluation, and tuning scripts
+- `scr/rec_system` - Recommender system implementation
+- `requirements.txt` - Python package dependencies
+
 
 ## Data Sources
 
@@ -78,6 +73,7 @@ python recommender.py
 ```
 
 ## Key Results
+
 
 
 ## Technologies Used
