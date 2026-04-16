@@ -97,6 +97,8 @@ def _is_applicable(scenario, feature, current_val, user_df):
     if scenario['source'] == 'jp':
         if 'target_val' in scenario and current_val <= scenario['target_val']: return False
         if current_val <= 0: return False
+        if feature == 'psqi_c2_sleep_latency' and current_val <= 1: return False
+        if feature == 'psqi_c7_daytime_dysfunction' and current_val <= 0: return False
 
     return True
 
