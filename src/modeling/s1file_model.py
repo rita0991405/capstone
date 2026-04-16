@@ -5,10 +5,12 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 import shap
+import matplotlib.pyplot as plt
 
+# Read in data
 df = pd.read_csv('S1File.csv')
 
-
+# Map column names for translation
 column_mapping = {
     '登録番号': 'registration_number',
     '施設': 'facility',
@@ -92,12 +94,11 @@ df = df.rename(columns=column_mapping)
 df = df[df['dm_type'].isin([2, 5])].copy()
 print("After filter:", df['dm_type'].value_counts())  # should show only 4 and 5
 print("Total rows:", len(df))
-#print(df.columns.tolist())
-#print(df.shape)
 
 # Drop leakage and ID columns
 leakage_cols = [
-    'registration_number', 'facility', 'patient_id',
+    'registration_number', 'facility', 'patient_id', 
+    'hba1c', #remove the stronggest indicator
     'illness_duration_years',                          # post-diagnosis
     'neuropathy', 'retinopathy', 'nephropathy',        # diabetes complications
     'foot_lesion', 'cerebral_infarction', 'cardiovascular_disease',
@@ -110,7 +111,7 @@ df = df.drop(columns=leakage_cols)
 
 # Keep pre-diagnosis features
 keep_cols = [
-    'age', 'sex', 'height', 'weight', 'bmi', 'hba1c',
+    'age', 'sex', 'height', 'weight', 'bmi', 
     'cigarettes_per_day', 'smoking_years', 'smoking_index', 'smoking_status',
     'alcohol', 'hypertension', 'hyperlipidemia',
     'psqi_c1_sleep_quality', 'psqi_c2_sleep_latency', 'psqi_c3_sleep_duration',
@@ -146,19 +147,7 @@ print(f"F1      : {scores['test_f1_macro'].mean():.4f} ± {scores['test_f1_macro
 print(f"Recall  : {scores['test_recall_macro'].mean():.4f} ± {scores['test_recall_macro'].std():.4f}")
 print(f"Train ROC-AUC: {scores['train_roc_auc'].mean():.4f}")
 
-### Results: n_splits = 10
-# ROC-AUC : 0.5112 ± 0.1262
-# F1      : 0.3955 ± 0.0097
-# Recall  : 0.4985 ± 0.1019
-# Train ROC-AUC: 0.6968
-### Results: n_splits = 5
-# ROC-AUC : 0.5116 ± 0.0748
-# F1      : 0.3960 ± 0.0097
-# Recall  : 0.5034 ± 0.0753
-# Train ROC-AUC: 0.7106
-
 # Add SHAP visualization
-# Fit final model on 80% for SHAP
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
@@ -172,11 +161,13 @@ X_train_np = scaler.transform(X_train).astype(float)
 X_test_np = scaler.transform(X_test).astype(float)
 
 # SHAP
-#explainer = shap.LinearExplainer(lr_pipeline.named_steps['model'], X_train_np)
-#shap_values = explainer.shap_values(X_test_np)
-#shap.summary_plot(shap_values, X_test_np, feature_names=X.columns.tolist())
+explainer = shap.LinearExplainer(lr_pipeline.named_steps['model'], X_train_np)
+shap_values = explainer.shap_values(X_test_np)
+shap.summary_plot(shap_values, X_test_np, feature_names=X.columns.tolist(), show = False)
+plt.title("SHAP beeswarm - S1 file full model")
+plt.show()
 
-### Trying Sleep-only model ####
+### Sleep-only model ####
 sleep_cols = [
     'psqi_c1_sleep_quality', 'psqi_c2_sleep_latency',
     'psqi_c3_sleep_duration', 'psqi_c4_sleep_efficiency',
@@ -199,11 +190,7 @@ print(f"F1      : {scores_sleep['test_f1_macro'].mean():.4f} ± {scores_sleep['t
 print(f"Recall  : {scores_sleep['test_recall_macro'].mean():.4f} ± {scores_sleep['test_recall_macro'].std():.4f}")
 print(f"Train ROC-AUC: {scores_sleep['train_roc_auc'].mean():.4f}")
 
-### Conclusion: sleep-only model
-#Sleep-only ROC-AUC: 0.5335, worse than full model
-#meaning sleep features alone cannot predict Type 2 diabetes in this Japanese cohort
-
-## Trying demographics-only model###
+## Demographics-only model###
 
 demo_only_cols = [
     'age', 'sex', 'height', 'weight', 'bmi',
@@ -231,30 +218,6 @@ print(f"Demographics only : {scores_demo['test_roc_auc'].mean():.4f}")
 print(f"Sleep only        : {scores_sleep['test_roc_auc'].mean():.4f}")
 print(f"Sleep added value : {scores['test_roc_auc'].mean() - scores_demo['test_roc_auc'].mean():.4f}")
 
-### Results:
-#ROC-AUC : 0.7494 ± 0.0387
-#F1      : 0.5579 ± 0.0238
-#Recall  : 0.6928 ± 0.0367
-#Train ROC-AUC: 0.7638
-
-# Sleep-Only Model
-#ROC-AUC : 0.5335 ± 0.0462
-#F1      : 0.4181 ± 0.0241
-#Recall  : 0.5206 ± 0.0412
-#Train ROC-AUC: 0.5608
-
-# Demographics-Only Model
-#ROC-AUC : 0.7475 ± 0.0455
-#F1      : 0.5569 ± 0.0280
-#Recall  : 0.6875 ± 0.0414
-#Train ROC-AUC: 0.7550
-
-# Comparison
-#Full model        : 0.7494
-#Demographics only : 0.7475
-#Sleep only        : 0.5335
-#Sleep added value : 0.0019
-
 #SHAP
 scaler_shap = StandardScaler()
 X_train_np  = scaler_shap.fit_transform(X_train.to_numpy().astype(float))
@@ -266,8 +229,58 @@ lr_shap_model.fit(X_train_np, y_train)
 explainer   = shap.LinearExplainer(lr_shap_model, X_train_np)
 shap_values = explainer.shap_values(X_test_np)
 
-# Beeswarm
-shap.summary_plot(shap_values, X_test_np, feature_names=X.columns.tolist())
+# Get PSQI correlation
+import pandas as pd
+from scipy import stats
 
-# Bar
-shap.summary_plot(shap_values, X_test_np, feature_names=X.columns.tolist(), plot_type="bar")
+df_jp = pd.read_excel('S1File.xlsx', sheet_name='T2DM(PSQI、A1cすべて○3294人)')
+
+df_jp.columns = [
+    'age', 'gender', 'duration', 'bmi', 'alcohol',
+    'neuropathy', 'retinopathy', 'nephropathy',
+    'hypertension', 'hyperlipidemia', 'macroangiopathy',
+    'psqi_c1', 'psqi_c2', 'psqi_c3', 'psqi_c4', 'hba1c',
+    'psqi_c5', 'psqi_c6', 'psqi_c7', 'psqi_total',
+    'sleep_duration', 'sleep_efficiency', 'sleep_latency', 'smoker'
+]
+
+target = 'hba1c'
+
+psqi_cols = [
+    'psqi_c1', 'psqi_c2', 'psqi_c3', 'psqi_c4',
+    'psqi_c5', 'psqi_c6', 'psqi_c7', 'psqi_total',
+    'sleep_duration', 'sleep_efficiency', 'sleep_latency'
+]
+
+print(f"{'Feature':<25} {'n':<7} {'r':>7}  {'p':<12} Sig")
+print("-" * 58)
+for col in psqi_cols:
+    df_clean = df_jp[[col, target]].dropna()  # ← both columns
+    r, p = stats.pearsonr(df_clean[col], df_clean[target])  # ← two arrays
+    sig = '***' if p < 0.001 else ('**' if p < 0.01 else ('*' if p < 0.05 else 'n.s.'))
+    print(f"{col:<25} {len(df_clean):<7} {r:>+.4f}  {p:<12.6f} {sig}")
+
+
+sleep_cols = ['sleep_duration', 'sleep_efficiency', 'sleep_latency']
+
+print(f"{'Stat':<12}", end='')
+for col in sleep_cols:
+    print(f"{col:>20}", end='')
+print()
+
+for stat in ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']:
+    print(f"{stat:<12}", end='')
+    for col in sleep_cols:
+        val = df_jp[col].describe()[stat]
+        print(f"{val:>20.4f}", end='')
+    print()
+
+print()
+print("Correlations with HbA1c:")
+print(f"{'Feature':<25} {'n':<7} {'r':>7}  {'p':<12} Sig")
+print("-" * 58)
+for col in sleep_cols:
+    df_clean = df_jp[[col, target]].dropna()  # ← both columns
+    r, p = stats.pearsonr(df_clean[col], df_clean[target])  # ← two arrays
+    sig = '***' if p < 0.001 else ('**' if p < 0.01 else ('*' if p < 0.05 else 'n.s.'))
+    print(f"{col:<25} {len(df_clean):<7} {r:>+.4f}  {p:<12.6f} {sig}")
