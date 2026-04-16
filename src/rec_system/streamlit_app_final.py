@@ -116,7 +116,6 @@ if calculate_button:
         'height': height,
         'weight': weight,
         'bmi': weight / (height/100)**2,
-        'hba1c': 5.5,
         'cigarettes_per_day': cigs,
         'smoking_years': smoking_years,
         'smoking_index': smoking_index,
@@ -320,4 +319,3 @@ if calculate_button:
             </div>
             <br>
             """, unsafe_allow_html=True)
-            
