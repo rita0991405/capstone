@@ -8,7 +8,7 @@ import json
 import shap
 
 from predictor import load_model, prepare_user_input, calculate_risk_score
-from recommender_prev import simulate_lifestyle_changes
+from recommender import simulate_lifestyle_changes
 
 st.config.set_option('theme.primaryColor', '#0165fc')
 
