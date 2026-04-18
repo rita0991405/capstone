@@ -8,7 +8,7 @@ import json
 import shap
 
 from predictor import load_model, prepare_user_input, calculate_risk_score
-from recommender import simulate_lifestyle_changes
+from recommender_prev import simulate_lifestyle_changes
 
 st.config.set_option('theme.primaryColor', '#0165fc')
 
@@ -153,6 +153,7 @@ if calculate_button:
 
     reduced_risk_score = recommendations[0]['new_risk'] / 100 if recommendations else None
     improvable_factors = [(r['label'], r['risk_reduction']) for r in recommendations]
+    improvable_factors = sorted(improvable_factors, key=lambda x: x[1], reverse=True)
 
     # ============
     #  VISUALS
@@ -235,6 +236,7 @@ if calculate_button:
     }
 
     shap_series = (pd.Series(dict(zip(feature_columns, vals)))
+        .drop(labels=[f for f in feature_columns if f.startswith('EC_occp_') and f != f'EC_occp_{occupation}'], errors='ignore')
         .sort_values(key=abs, ascending=False)
         .head(10)
         .dropna()
@@ -269,15 +271,15 @@ if calculate_button:
     st.markdown('<br>', unsafe_allow_html=True)
 
     # --- Visual 3: Risk Reduction ---
-    st.subheader('Risk Reduction by Change')
+    st.subheader('Risk Reduction by Lifestyle Change')
 
     if not improvable_factors:
         st.success('Nothing to improve!')
     else:
         wf_labels = ['Current Score'] + [f for f, _ in improvable_factors] + ['Projected Score']
         wf_values = [current_risk_score] + [-v/100 for _, v in improvable_factors] + [reduced_risk_score]
-        wf_types = ['absolute'] + ['relative'] * len(improvable_factors) + ['total']
-        wf_text = [risk_percent] + [f'-{v:.1f}' for _, v in improvable_factors] + [f'{reduced_risk_score * 100:.1f}%' if reduced_risk_score is not None else '—']
+        wf_types  = ['absolute'] + ['relative'] * len(improvable_factors) + ['total']
+        wf_text   = [risk_percent] + [f'{-v/100:.2f}' for _, v in improvable_factors] + [f'{reduced_risk_score * 100:.1f}%']  # ← no None check, same as original
 
         fig = go.Figure(go.Waterfall(
             measure=wf_types,
@@ -288,7 +290,7 @@ if calculate_button:
             decreasing={'marker': {'color': '#48A860'}},
             totals={'marker': {'color': '#0165fc'}},
             connector={'visible': False},
-        ))
+            ))
 
         fig.update_layout(
             height=280,
@@ -296,7 +298,8 @@ if calculate_button:
             yaxis_title='Risk Score',
             showlegend=False,
             hovermode=False,
-        )
+            )
+    
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
     st.divider()
@@ -314,7 +317,7 @@ if calculate_button:
             <div class='rec-title' style='font-size:1.3rem; font-weight:500;'>{rec.get('title', rec['label'])}</div>
             <div style='display:flex; gap:8px; align-items:baseline;'>
                 <span class='rec-detail'>{rec.get('detail', rec['description'])}</span>
-                <span class='rec-reduction'>This reduces your risk score by {rec['risk_reduction']:.1f}%</span>
+                <span class='rec-reduction'>This reduces your risk score by {rec['risk_reduction']/100:.2f}%</span>
             </div>
             </div>
             <br>
