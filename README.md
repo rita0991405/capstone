@@ -57,7 +57,7 @@ pip install -r requirements.txt
 ```bash
 # Perform EDA and extract features for supervised learning
 python prediabetes_eda.py
-# Outputs:
+python s1file_eda.py
 ```
 
 2. **Modeling**
@@ -70,6 +70,7 @@ python s1file_model.py
 ```bash
 python predictor.py
 python recommender.py
+streamlit run streamlit_app_final.py
 ```
 
 ## Key Results
@@ -78,4 +79,4 @@ python recommender.py
 
 ## Technologies Used
 - Python 3.12
-- pandas, numpy, matplotlib, seaborn
+- pandas, numpy, matplotlib, seaborn, scikit-learn, shap, xgboost, atlair, streamlit, plotly
