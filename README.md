@@ -1,4 +1,5 @@
 # Capstone Project - Predicting Type 2 Diabetes Risk in East Asian Populations
+
 ## Project Overview
 This project set out to investigate whether sleep-related characteristics, such as duration and maintenance, could meaningfully predict Type 2 diabetes risk in East Asian populations, where existing Western-focused models may not apply due to elevated metabolic risk at lower body–mass index (BMI) values.
 
@@ -68,9 +69,6 @@ python predictor.py
 python recommender.py
 streamlit run streamlit_app_final.py
 ```
-
-## Results
-We developed a type 2 diabetes risk prediction model and recommender system tailored to East Asian populations, where age, BMI, and clinical markers drive most of the predictive power. Because these factors are largely non-modifiable, the system focuses on actionable inputs like weight, smoking, and exercise to deliver realistic, personalized lifestyle recommendations. This approach turns risk prediction into practical guidance for reducing individual diabetes risk.
 
 ## Technologies Used
 - Python 3.12
