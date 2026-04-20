@@ -1,4 +1,5 @@
 # Capstone Project - Predicting Type 2 Diabetes Risk in East Asian Populations
+University of Michigan Master of Applied Data Science Capstone Project
 
 ## Project Overview
 This project set out to investigate whether sleep-related characteristics, such as duration and maintenance, could meaningfully predict Type 2 diabetes risk in East Asian populations, where existing Western-focused models may not apply due to elevated metabolic risk at lower body–mass index (BMI) values.
