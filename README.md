@@ -68,7 +68,7 @@ python s1file_model.py
 ```bash
 python predictor.py
 python recommender.py
-streamlit run streamlit_app_final.py
+streamlit run streamlit_app.py
 ```
 
 ## Technologies Used
